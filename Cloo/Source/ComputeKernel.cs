@@ -237,17 +237,18 @@ namespace Cloo
         /// <remarks> Arguments to the kernel are referred by indices that go from 0 for the leftmost argument to n-1, where n is the total number of arguments declared by the kernel. </remarks>
         public void SetValueArgument<T>(int index, T data) where T : struct
         {
-            GCHandle gcHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            int sz = Marshal.SizeOf(typeof(T));
+            IntPtr ptr = Marshal.AllocHGlobal(sz);
+
             try
             {
-                SetArgument(
-                    index,
-                    new IntPtr(Marshal.SizeOf(typeof(T))),
-                    gcHandle.AddrOfPinnedObject());
+                Marshal.StructureToPtr(data, ptr, false);
+                SetArgument(index,new IntPtr(sz), ptr);
             }
             finally
             {
-                gcHandle.Free();
+                Marshal.DestroyStructure(ptr, typeof(T));
+                Marshal.FreeHGlobal(ptr);
             }
         }
 

@@ -82,12 +82,9 @@ namespace Cloo
         #endregion
 
         #region Internal methods
-
         internal static IntPtr[] ConvertArray(long[] array)
         {
             if (array == null) return null;
-
-            NumberFormatInfo nfi = new NumberFormatInfo();
 
             IntPtr[] result = new IntPtr[array.Length];
             for (long i = 0; i < array.Length; i++)
@@ -98,8 +95,6 @@ namespace Cloo
         internal static long[] ConvertArray(IntPtr[] array)
         {
             if (array == null) return null;
-
-            NumberFormatInfo nfi = new NumberFormatInfo();
 
             long[] result = new long[array.Length];
             for (long i = 0; i < array.Length; i++)

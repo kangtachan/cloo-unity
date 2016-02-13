@@ -339,12 +339,25 @@ namespace Cloo
         /// <param name="events"> A collection of events that need to complete before this particular command can be executed. If <paramref name="events"/> is not <c>null</c> or read-only a new <see cref="ComputeEvent"/> identifying this command is created and attached to the end of the collection. </param>
         public void Execute(ComputeKernel kernel, long[] globalWorkOffset, long[] globalWorkSize, long[] localWorkSize, ICollection<ComputeEventBase> events)
         {
+            Execute(kernel, ComputeTools.ConvertArray(globalWorkOffset), ComputeTools.ConvertArray(globalWorkSize), ComputeTools.ConvertArray(localWorkSize), events);
+        }
+
+        /// <summary>
+        /// Enqueues a command to execute a range of <see cref="ComputeKernel"/>s in parallel.
+        /// </summary>
+        /// <param name="kernel"> The <see cref="ComputeKernel"/> to execute. </param>
+        /// <param name="globalWorkOffset"> An array of values that describe the offset used to calculate the global ID of a work-item instead of having the global IDs always start at offset (0, 0,... 0). </param>
+        /// <param name="globalWorkSize"> An array of values that describe the number of global work-items in dimensions that will execute the kernel function. The total number of global work-items is computed as global_work_size[0] *...* global_work_size[work_dim - 1]. </param>
+        /// <param name="localWorkSize"> An array of values that describe the number of work-items that make up a work-group (also referred to as the size of the work-group) that will execute the <paramref name="kernel"/>. The total number of work-items in a work-group is computed as local_work_size[0] *... * local_work_size[work_dim - 1]. </param>
+        /// <param name="events"> A collection of events that need to complete before this particular command can be executed. If <paramref name="events"/> is not <c>null</c> or read-only a new <see cref="ComputeEvent"/> identifying this command is created and attached to the end of the collection. </param>
+        public void Execute(ComputeKernel kernel, IntPtr[] globalWorkOffset, IntPtr[] globalWorkSize, IntPtr[] localWorkSize, ICollection<ComputeEventBase> events)
+        {
             int eventWaitListSize;
             CLEventHandle[] eventHandles = ComputeTools.ExtractHandles(events, out eventWaitListSize);
             bool eventsWritable = (events != null && !events.IsReadOnly);
             CLEventHandle[] newEventHandle = (eventsWritable) ? new CLEventHandle[1] : null;
 
-            ComputeErrorCode error = CLInterface.CL12.EnqueueNDRangeKernel(Handle, kernel.Handle, globalWorkSize.Length, ComputeTools.ConvertArray(globalWorkOffset), ComputeTools.ConvertArray(globalWorkSize), ComputeTools.ConvertArray(localWorkSize), eventWaitListSize, eventHandles, newEventHandle);
+            ComputeErrorCode error = CLInterface.CL12.EnqueueNDRangeKernel(Handle, kernel.Handle, globalWorkSize.Length, globalWorkOffset, globalWorkSize, localWorkSize, eventWaitListSize, eventHandles, newEventHandle);
             ComputeException.ThrowOnError(error);
 
             if (eventsWritable)
